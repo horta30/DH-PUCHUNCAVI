@@ -255,7 +255,7 @@ function actualizarUI() {
   }
 
   // Fetch mejores remotos si hay nombre
-  if (nombre) fetchRemoteBests();
+  if (nombre) { fetchRemoteBests(); fetchPosicion(); }
 }
 
 // ── FETCH SUPABASE BESTS ──
@@ -275,6 +275,29 @@ async function fetchRemoteBests() {
         el.className = 'stage-status done';
       }
     });
+  } catch (e) {}
+}
+
+// ── FETCH POSICIÓN EN RANKING ──
+async function fetchPosicion() {
+  if (!nombre) return;
+  const t1 = GravitasSession.getTime(1);
+  if (!t1) return;
+  const pin = GravitasSession.pin(nombre);
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/mejores_tiempos?evento=eq.${EVENTO}&stage=eq.1&order=tiempo_ms.asc`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    const idx = data.findIndex(d => d.nombre === nombre && String(d.pin) === pin);
+    const el = document.getElementById('status-s1');
+    if (!el) return;
+    if (idx >= 0) {
+      el.textContent = `Mejor: ${fmt(t1.ms)} · #${idx + 1}/${data.length}`;
+    } else {
+      el.textContent = `Mejor: ${fmt(t1.ms)} · pendiente sync`;
+    }
   } catch (e) {}
 }
 
