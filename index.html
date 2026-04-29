@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Stage Crono Puchuncaví</title>
+<meta property="og:title" content="Stage Crono Puchuncaví">
+<meta property="og:description" content="Cronometraje GPS · DH La Canela · Ranking online.">
+<meta property="og:image" content="./og-image.png">
+<meta property="og:image:width" content="1500">
+<meta property="og:image:height" content="843">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="./og-image.png">
+<meta name="theme-color" content="#080808">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="./assets/session.js"></script>
+<style>
+:root{--bg:#080808;--dark:#111;--dark2:#1a1a1a;--border:#1e1e1e;--green:#00ff41;--orange:#ff6b00;--yellow:#ffd600;--white:#e8e8e8;--grey:#444;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--white);font-family:'Barlow Condensed',sans-serif;min-height:100vh;}
+body{max-width:480px;margin:0 auto;padding:0 0 60px;}
+
+
+
+/* TRACKS CANVAS */
+#overview-section{padding:0 16px 20px;}
+.overview-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--grey);margin-bottom:10px;display:block;}
+.overview-desc{font-size:13px;font-weight:300;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:14px;}
+#tracks-canvas{width:100%;height:260px;display:block;border-radius:4px;background:#0a0a0a;min-height:260px;}
+
+/* HERO */
+#hero{padding:40px 24px 28px;position:relative;overflow:hidden;}
+canvas#bg-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.2;pointer-events:none;}
+.hero-inner{position:relative;z-index:2;}
+.hero-kicker{font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--green);margin-bottom:10px;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,17vw,92px);line-height:.85;margin-bottom:12px;}
+.hero-title span{color:var(--green);}
+.hero-sub{font-size:13px;font-weight:300;color:rgba(255,255,255,.4);line-height:1.7;max-width:300px;margin-bottom:28px;}
+
+/* NAME BLOCK */
+.name-block{margin-bottom:8px;}
+.name-label{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--green);margin-bottom:8px;display:block;}
+.name-row{display:flex;gap:0;}
+.name-input{flex:1;background:var(--dark2);border:1px solid rgba(0,255,65,.25);border-right:none;color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;padding:12px 16px;outline:none;transition:border-color .2s;}
+.name-input:focus{border-color:rgba(0,255,65,.6);}
+.name-input::placeholder{color:var(--grey);font-weight:400;}
+.name-confirm{background:var(--green);color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.1em;padding:12px 20px;border:none;cursor:pointer;}
+.name-confirm:active{opacity:.8;}
+
+/* PILOT INFO (cuando ya tiene nombre) */
+.pilot-info{display:none;align-items:center;justify-content:space-between;background:rgba(0,255,65,.04);border:1px solid rgba(0,255,65,.15);border-radius:3px;padding:10px 14px;margin-bottom:8px;}
+.pilot-info.show{display:flex;}
+.pilot-name{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green);letter-spacing:.06em;}
+.pilot-change{font-size:10px;color:var(--grey);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-bottom:1px solid var(--grey);padding-bottom:1px;}
+.pilot-change:hover{color:var(--white);}
+
+/* SECTION LABEL */
+.section-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--grey);padding:0 24px;margin-bottom:12px;}
+
+/* STAGE CARDS */
+.stage-card{margin:0 16px 10px;background:var(--dark);border:1px solid var(--border);border-radius:4px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;position:relative;}
+.stage-card:active{transform:scale(.98);}
+.stage-card.s1{border-left:3px solid transparent;}
+.stage-card.s2{border-left:3px solid transparent;}
+.stage-card.s1.done{border-left-color:var(--green);border-color:rgba(0,255,65,.2);}
+.stage-card.s2.done{border-left-color:var(--orange);border-color:rgba(255,107,0,.2);}
+.stage-card.next-up{box-shadow:0 0 0 1px rgba(255,214,0,.3);}
+
+.stage-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.stage-num{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
+.stage-card.s1 .stage-num{color:rgba(0,255,65,.12);}
+.stage-card.s2 .stage-num{color:rgba(255,107,0,.1);}
+.stage-card.done .stage-num{opacity:.6;}
+.stage-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.05em;}
+.stage-card.s1 .stage-name{color:var(--green);}
+.stage-card.s2 .stage-name{color:var(--orange);}
+.stage-zone{font-size:11px;color:var(--grey);letter-spacing:.06em;margin-top:2px;}
+
+.stage-stats{display:flex;gap:0;border-top:1px solid var(--border);}
+.stat{flex:1;padding:9px 12px;border-right:1px solid var(--border);text-align:center;}
+.stat:last-child{border-right:none;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--white);}
+.stat-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);margin-top:1px;}
+
+.stage-cta{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}
+.stage-btn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.12em;padding:9px 18px;border:none;cursor:pointer;border-radius:2px;}
+.stage-card.s1 .stage-btn{background:var(--green);color:#000;}
+.stage-card.s2 .stage-btn{background:var(--orange);color:#000;}
+.stage-card.done .stage-btn{background:transparent;border:1px solid var(--grey);color:var(--grey);font-size:13px;}
+.stage-status{font-size:11px;color:var(--grey);letter-spacing:.06em;}
+.stage-status.done{color:var(--green);}
+.stage-status.done-s2{color:var(--orange);}
+
+/* NEXT BADGE */
+.next-badge{position:absolute;top:10px;right:12px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;background:rgba(255,214,0,.12);color:var(--yellow);border:1px solid rgba(255,214,0,.25);padding:3px 8px;border-radius:2px;}
+
+/* CAMPEONATO BANNER */
+.camp-banner{margin:6px 16px 18px;background:var(--dark);border:1px solid rgba(255,214,0,.2);border-radius:4px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.camp-icon{font-size:26px;flex-shrink:0;}
+.camp-info{flex:1;}
+.camp-title{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--yellow);letter-spacing:.06em;}
+.camp-sub{font-size:11px;color:var(--grey);margin-top:2px;line-height:1.5;}
+.camp-time{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);margin-top:2px;}
+.camp-btn{background:transparent;border:1px solid rgba(255,214,0,.4);color:var(--yellow);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.1em;padding:8px 12px;cursor:pointer;flex-shrink:0;border-radius:2px;}
+.camp-btn:active{background:rgba(255,214,0,.1);}
+
+/* RESULTS SHORTCUTS */
+.results-row{margin:0 16px 20px;display:flex;gap:8px;}
+.res-btn{flex:1;background:var(--dark2);border:1px solid var(--border);color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 6px;cursor:pointer;text-align:center;border-radius:2px;text-decoration:none;display:block;transition:all .2s;}
+.res-btn:hover{border-color:var(--green);color:var(--green);}
+
+/* FOOTER */
+footer{text-align:center;padding:20px;font-size:10px;color:var(--grey);letter-spacing:.12em;border-top:1px solid var(--border);margin:0 16px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--dark2);border:1px solid rgba(0,255,65,.4);border-radius:3px;padding:10px 20px;font-size:13px;letter-spacing:.1em;color:var(--green);transition:transform .3s;z-index:100;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div id="hero">
+  <canvas id="bg-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-kicker">Cronometraje GPS · Puchuncaví</div>
+    <h1 class="hero-title">STAGE<br><span>CRONO</span></h1>
+    <p class="hero-sub">Cronometraje automático por GPS. Pasa el inicio y el timer arranca solo.</p>
+
+    <!-- NOMBRE INPUT (se oculta si ya hay piloto) -->
+    <div class="name-block" id="name-block">
+      <label class="name-label" for="nombre-input">Tu nombre</label>
+      <div class="name-row">
+        <input class="name-input" id="nombre-input" type="text" placeholder="Escribe tu nombre..." maxlength="30" autocomplete="off" spellcheck="false">
+        <button class="name-confirm" onclick="guardarNombre()">OK</button>
+      </div>
+    </div>
+
+    <!-- PILOT INFO (se muestra si ya hay piloto) -->
+    <div class="pilot-info" id="pilot-info">
+      <div class="pilot-name" id="pilot-display">—</div>
+      <span class="pilot-change" onclick="cambiarNombre()">cambiar</span>
+    </div>
+  </div>
+</div>
+
+<div id="overview-section">
+  <span class="overview-label">El Stage</span>
+  <p class="overview-desc">DH puro de 2.57 km y 464 m de desnivel en La Canela, Puchuncaví. Compite contra el reloj y entra al ranking.</p>
+  <canvas id="tracks-canvas" style="width:100%;height:260px;display:block;background:#0a0a0a;border-radius:4px;"></canvas>
+</div>
+
+
+<p class="section-label" id="stages-label">Tu stage</p>
+
+<!-- STAGE 1 -->
+<div class="stage-card s1" id="card-s1" onclick="irAStage(1)">
+  <div class="stage-header">
+    <div>
+      <div class="stage-name">DH LA CANELA</div>
+      <div class="stage-zone">Puchuncaví · V Región</div>
+    </div>
+    <div class="stage-num">01</div>
+  </div>
+  <div class="stage-stats">
+    <div class="stat"><div class="stat-val">2.57</div><div class="stat-lbl">km</div></div>
+    <div class="stat"><div class="stat-val">3</div><div class="stat-lbl">Parciales</div></div>
+    <div class="stat"><div class="stat-val">464m</div><div class="stat-lbl">Desnivel</div></div>
+    <div class="stat"><div class="stat-val">DH</div><div class="stat-lbl">Modalidad</div></div>
+  </div>
+  <div class="stage-cta">
+    <button class="stage-btn" id="btn-s1">▶ INICIAR</button>
+    <span class="stage-status" id="status-s1">—</span>
+  </div>
+</div>
+
+
+<!-- LEADERBOARD -->
+<div class="results-row">
+  <a class="res-btn" href="./resultados.html">🏆 Ver ranking</a>
+</div>
+
+<footer>STAGE CRONO PUCHUNCAVÍ · 2026 · Gravitas Solutions</footer>
+<div id="toast"></div>
+
+<script>
+// ── ESTADO ──
+let nombre = GravitasSession.getPilot() || '';
+
+function fmt(ms) {
+  if (!ms) return null;
+  const s = Math.floor(ms / 1000), m = Math.floor(s / 60), ss = s % 60, t = Math.floor((ms % 1000) / 100);
+  return `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${t}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── NOMBRE ──
+function guardarNombre() {
+  const v = document.getElementById('nombre-input').value.trim();
+  if (!v) return;
+  nombre = v;
+  GravitasSession.save(nombre);
+  showToast('✅ Nombre guardado');
+  actualizarUI();
+}
+document.getElementById('nombre-input').addEventListener('keydown', e => { if (e.key === 'Enter') guardarNombre(); });
+
+function cambiarNombre() {
+  document.getElementById('pilot-info').classList.remove('show');
+  document.getElementById('name-block').style.display = 'block';
+  document.getElementById('nombre-input').value = nombre;
+  document.getElementById('nombre-input').focus();
+}
+
+// ── IR A STAGE ──
+function irAStage(n) {
+  const nom = document.getElementById('nombre-input').value.trim() || nombre;
+  if (!nom) { document.getElementById('nombre-input').focus(); showToast('⚠️ Escribe tu nombre primero'); return; }
+  if (!nombre) { nombre = nom; GravitasSession.save(nombre); }
+  window.location.href = `./crono.html?seg=${n}`;
+}
+
+// ── ACTUALIZAR UI SEGÚN SESIÓN ──
+function actualizarUI() {
+  const t1 = GravitasSession.getTime(1);
+
+  // Nombre
+  if (nombre) {
+    document.getElementById('name-block').style.display = 'none';
+    document.getElementById('pilot-info').classList.add('show');
+    document.getElementById('pilot-display').textContent = nombre.toUpperCase();
+    document.getElementById('stages-label').textContent = `Hola ${nombre.split(' ')[0]} — listo para bajar`;
+  }
+
+  // Stage 1 status
+  const card1 = document.getElementById('card-s1');
+  const st1 = document.getElementById('status-s1');
+  const btn1 = document.getElementById('btn-s1');
+  if (t1) {
+    card1.classList.add('done');
+    st1.textContent = `Mejor: ${fmt(t1.ms)}`; st1.className = 'stage-status done';
+    btn1.textContent = '🔁 MEJORAR';
+  } else {
+    card1.classList.add('next-up');
+    card1.insertAdjacentHTML('afterbegin', '<div class="next-badge">▶ INICIAR</div>');
+  }
+
+  // Fetch mejores remotos si hay nombre
+  if (nombre) fetchRemoteBests();
+}
+
+// ── FETCH SUPABASE BESTS ──
+async function fetchRemoteBests() {
+  if (!nombre) return;
+  const pin = GravitasSession.pin(nombre);
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/mejores_tiempos?evento=eq.${EVENTO}&nombre=eq.${encodeURIComponent(nombre)}&pin=eq.${pin}`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    const data = await r.json();
+    data.forEach(d => {
+      if (d.stage !== 1) return;
+      const el = document.getElementById('status-s1');
+      if (el && !el.classList.contains('done')) {
+        el.textContent = `Mejor: ${fmt(d.tiempo_ms)}`;
+        el.className = 'stage-status done';
+      }
+    });
+  } catch (e) {}
+}
+
+// ── INIT ──
+if (nombre) {
+  document.getElementById('nombre-input').value = nombre;
+}
+actualizarUI();
+
+
+
+// ── TRACKS ANIMADOS ──
+(function() {
+  const canvas = document.getElementById('tracks-canvas');
+  const dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * dpr;
+    canvas.height = rect.height * dpr;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const TRACKS = {"1":[[-32.70663, -71.37025], [-32.70666, -71.37001], [-32.70671, -71.36968], [-32.70675, -71.3693], [-32.70669, -71.36901], [-32.70664, -71.36886], [-32.70662, -71.3687], [-32.70656, -71.3686], [-32.70651, -71.36844], [-32.7065, -71.3683], [-32.70651, -71.36817], [-32.70647, -71.36797], [-32.70653, -71.3674], [-32.70646, -71.36726], [-32.70639, -71.3672], [-32.70632, -71.36719], [-32.70623, -71.36715], [-32.70616, -71.36714], [-32.70589, -71.36691], [-32.70578, -71.36663], [-32.7057, -71.3663], [-32.70568, -71.36608], [-32.70559, -71.3658], [-32.70554, -71.36553], [-32.70553, -71.36533], [-32.7055, -71.36524], [-32.70546, -71.36511], [-32.70545, -71.36492], [-32.70547, -71.36476], [-32.70551, -71.36459], [-32.70556, -71.36438], [-32.70558, -71.36427], [-32.70563, -71.3641], [-32.70576, -71.36386], [-32.70585, -71.36368], [-32.70592, -71.36337], [-32.70589, -71.36326], [-32.7059, -71.36309], [-32.70586, -71.36291], [-32.70578, -71.3627], [-32.70568, -71.36228], [-32.70561, -71.36204], [-32.70553, -71.36188], [-32.70555, -71.36177], [-32.70538, -71.3616], [-32.7053, -71.36148], [-32.70531, -71.36128], [-32.70536, -71.36119], [-32.70529, -71.36093], [-32.70527, -71.36066], [-32.70523, -71.36044], [-32.70513, -71.36024], [-32.70513, -71.36007], [-32.70512, -71.35982], [-32.70502, -71.3588], [-32.70501, -71.35855], [-32.70496, -71.35824], [-32.7049, -71.35803], [-32.70476, -71.35808], [-32.70422, -71.358], [-32.70402, -71.35763], [-32.7041, -71.35726], [-32.70431, -71.35705], [-32.70438, -71.35678], [-32.70457, -71.3566], [-32.70472, -71.35646], [-32.70479, -71.35617], [-32.70489, -71.3559], [-32.70497, -71.35574], [-32.70505, -71.35554], [-32.70511, -71.35532], [-32.70514, -71.35503], [-32.70518, -71.35495], [-32.70525, -71.3548], [-32.70532, -71.35468], [-32.70544, -71.35449], [-32.70555, -71.35421], [-32.70564, -71.35397], [-32.70579, -71.35374], [-32.70597, -71.35354], [-32.70638, -71.35283], [-32.70675, -71.35217], [-32.70686, -71.35194], [-32.70709, -71.35171], [-32.70727, -71.35158], [-32.70735, -71.3514], [-32.7074, -71.35118], [-32.70754, -71.35106], [-32.70774, -71.35073], [-32.70801, -71.35069], [-32.70819, -71.35068], [-32.70854, -71.3507], [-32.70877, -71.35056], [-32.70887, -71.35046], [-32.70895, -71.3503], [-32.70908, -71.34993], [-32.70906, -71.34974], [-32.70895, -71.34978], [-32.70874, -71.34957], [-32.70857, -71.34949], [-32.70856, -71.34937], [-32.70854, -71.34927], [-32.70853, -71.34913], [-32.70859, -71.34897], [-32.70851, -71.34883], [-32.70848, -71.34878]]};
+  const WPS = {"1":[[-32.7084869, -71.34847101], [-32.70769247, -71.35081295], [-32.70482195, -71.35610724], [-32.70554936, -71.36447348], [-32.70662628, -71.37025969]]};
+  const BOUNDS = {"1":{"minLat": -32.709598, "maxLat": -32.703512, "minLon": -71.370754, "maxLon": -71.348281}};
+  const COLORS = {'1':'#00ff41'};
+  const NAMES = {'1':'DH LA CANELA'};
+  const DISTS = {'1':'2.57 km'};
+  const SEGS   = [1];
+
+  // Project a point using per-segment bounds
+  function project(lat, lon, seg) {
+    const b = BOUNDS[seg];
+    const W = canvas.width, H = canvas.height;
+    const pad = 0.1;
+    const x = pad*W + (lon - b.minLon) / (b.maxLon - b.minLon) * W*(1-pad*2);
+    const y = pad*H + (1 - (lat - b.minLat) / (b.maxLat - b.minLat)) * H*(1-pad*2);
+    return [x, y];
+  }
+
+  // Draw grid
+  function drawGrid(ctx, alpha) {
+    ctx.globalAlpha = 0.04 * alpha;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    for (let i=1; i<8; i++) {
+      ctx.beginPath(); ctx.moveTo(canvas.width*i/8, 0); ctx.lineTo(canvas.width*i/8, canvas.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, canvas.height*i/8); ctx.lineTo(canvas.width, canvas.height*i/8); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Draw full track (glow + line)
+  function drawTrack(ctx, seg, pts, alpha) {
+    if (pts.length < 2) return;
+    const col = COLORS[seg];
+    const path = () => {
+      ctx.beginPath();
+      pts.forEach(([la,lo],i) => {
+        const [x,y] = project(la,lo,seg);
+        i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+      });
+    };
+    // glow
+    path(); ctx.strokeStyle=col; ctx.lineWidth=14*dpr; ctx.globalAlpha=0.06*alpha; ctx.filter='blur(5px)'; ctx.stroke(); ctx.filter='none';
+    // line
+    path(); ctx.strokeStyle=col; ctx.lineWidth=2.5*dpr; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.globalAlpha=alpha; ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  // Draw waypoint diamond
+  function drawWP(ctx, lat, lon, seg, isStart, isEnd, alpha) {
+    const [x,y] = project(lat, lon, seg);
+    const col = isStart ? '#00ff41' : isEnd ? '#ffd600' : COLORS[seg];
+    const s = (isStart||isEnd ? 8 : 5) * dpr;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x,y-s); ctx.lineTo(x+s,y); ctx.lineTo(x,y+s); ctx.lineTo(x-s,y); ctx.closePath(); ctx.fill();
+    // ring on start/end
+    if (isStart || isEnd) {
+      ctx.beginPath(); ctx.arc(x,y,s*1.8,0,Math.PI*2);
+      ctx.strokeStyle=col; ctx.lineWidth=1*dpr; ctx.globalAlpha=alpha*0.35; ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // Draw label overlay
+  function drawLabel(ctx, seg, alpha) {
+    const col = COLORS[seg];
+    const name = NAMES[seg];
+    const dist = DISTS[seg];
+    const W = canvas.width, H = canvas.height;
+    const fs = 13 * dpr;
+    const fs2 = 10 * dpr;
+
+    ctx.globalAlpha = alpha;
+    // Stage number badge top-left
+    ctx.fillStyle = col;
+    ctx.font = `900 ${fs*1.4}px 'Bebas Neue', sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`S${seg}`, 14*dpr, 14*dpr);
+
+    // Name
+    ctx.font = `700 ${fs}px 'Barlow Condensed', sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(name, 14*dpr + 34*dpr, 16*dpr);
+
+    // Distance
+    ctx.font = `400 ${fs2}px 'Barlow Condensed', sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText(dist, 14*dpr + 34*dpr, 16*dpr + fs + 2*dpr);
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Moving dot on track
+  function drawDot(ctx, seg, ptIdx, alpha) {
+    const pts = TRACKS[seg];
+    const i = Math.min(Math.floor(ptIdx), pts.length-1);
+    const [x,y] = project(pts[i][0], pts[i][1], seg);
+    const col = COLORS[seg];
+    // pulse
+    ctx.beginPath(); ctx.arc(x,y,12*dpr,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.globalAlpha=0.12*alpha; ctx.fill();
+    // dot
+    ctx.beginPath(); ctx.arc(x,y,4.5*dpr,0,Math.PI*2);
+    ctx.fillStyle=col; ctx.globalAlpha=alpha; ctx.fill();
+    ctx.globalAlpha=1;
+  }
+
+  // ── STATE MACHINE ──
+  // phases: draw → show → fadeout → fadein(next)
+  let seg = 0;          // index into SEGS
+  let ptIdx = 0;
+  let phase = 'fadein';
+  let alpha = 0;        // master alpha for current stage
+  const SPEED = 2.5;
+  const SHOW_FRAMES = 90;
+  let showTimer = 0;
+
+  function draw() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const s = SEGS[seg];
+
+    drawGrid(ctx, alpha);
+
+    if (phase === 'fadein') {
+      alpha = Math.min(1, alpha + 0.04);
+      // just show empty track faintly while fading in
+      drawTrack(ctx, s, TRACKS[s].slice(0,2), alpha*0.3);
+      drawLabel(ctx, s, alpha);
+      if (alpha >= 1) { phase = 'draw'; ptIdx = 0; }
+
+    } else if (phase === 'draw') {
+      const partial = TRACKS[s].slice(0, Math.floor(ptIdx)+1);
+      drawTrack(ctx, s, partial, 1);
+      drawDot(ctx, s, ptIdx, 1);
+      drawLabel(ctx, s, 1);
+      ptIdx += SPEED;
+      if (ptIdx >= TRACKS[s].length) { phase = 'show'; showTimer = 0; ptIdx = TRACKS[s].length-1; }
+
+    } else if (phase === 'show') {
+      drawTrack(ctx, s, TRACKS[s], 1);
+      // draw all waypoints
+      TRACKS[s].forEach((_,i) => {
+        const wp_lats = WPS[s].map(w=>w[0]);
+        const wp_lons = WPS[s].map(w=>w[1]);
+      });
+      WPS[s].forEach((w,i) => drawWP(ctx, w[0], w[1], s, i===0, i===WPS[s].length-1, 1));
+      drawLabel(ctx, s, 1);
+      showTimer++;
+      if (showTimer > SHOW_FRAMES) { phase = 'fadeout'; }
+
+    } else if (phase === 'fadeout') {
+      alpha = Math.max(0, alpha - 0.04);
+      drawTrack(ctx, s, TRACKS[s], alpha);
+      WPS[s].forEach((w,i) => drawWP(ctx, w[0], w[1], s, i===0, i===WPS[s].length-1, alpha));
+      drawLabel(ctx, s, alpha);
+      if (alpha <= 0) {
+        seg = (seg + 1) % SEGS.length;
+        phase = 'fadein';
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
+
+
+// ── BG CANVAS ──
+(function () {
+  const c = document.getElementById('bg-canvas');
+  const W = () => { c.width = c.offsetWidth; c.height = c.offsetHeight; };
+  W(); window.addEventListener('resize', W);
+  const pts = [[0,.2],[.15,.35],[.3,.15],[.5,.45],[.65,.25],[.8,.5],[1,.3]];
+  let t = 0;
+  function draw() {
+    const ctx = c.getContext('2d'), w = c.width, h = c.height;
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, h*.06+i*h*.12); ctx.lineTo(w, h*.06+i*h*.12); ctx.strokeStyle = `rgba(0,255,65,.015)`; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => { const cx = x*w, cy = y*h+(Math.sin(t+i)*.015*h); i ? ctx.lineTo(cx,cy) : ctx.moveTo(cx,cy); });
+    ctx.strokeStyle = 'rgba(0,255,65,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+    t += .008; requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
