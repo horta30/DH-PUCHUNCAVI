@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Resultados — Stage Crono</title>
 <meta property="og:title" content="Resultados · Stage Crono">
-<meta property="og:description" content="Leaderboard oficial · DH La Canela Puchuncaví">
+<meta property="og:description" content="Leaderboard oficial · DH Puchuncaví Puchuncaví">
 <meta property="og:image" content="./og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="./og-image.png">
@@ -114,7 +114,7 @@ body{min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:40px;}
     <div class="hdr-live"><div class="live-dot"></div>EN VIVO</div>
   </div>
   <div id="tabs">
-    <div class="tab active" data-tab="s1" onclick="switchTab(this)">🏆 DH LA CANELA</div>
+    <div class="tab active" data-tab="s1" onclick="switchTab(this)">🏆 DH PUCHUNCAVÍ</div>
   </div>
 </div>
 
@@ -267,7 +267,7 @@ function filterBoard(){ renderBoard(); }
 // ── SHARE ──
 function shareLeaderboard(){
   const url=`${window.location.origin}${window.location.pathname}`;
-  const txt=`🏆 Leaderboard DH La Canela — Stage Crono Puchuncaví\n${url}`;
+  const txt=`🏆 Leaderboard DH Puchuncaví — Stage Crono Puchuncaví\n${url}`;
   if(navigator.share) navigator.share({title:`Stage Crono Puchuncaví`,text:txt,url}).catch(()=>{});
   else navigator.clipboard.writeText(url).then(()=>alert('Link copiado'));
 }
